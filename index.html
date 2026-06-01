@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="App Cá Nhân"/>
+<title>App Cá Nhân</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="styles.css"/>
+
+</head>
+<body>
+
+<div class="auth-screen" id="authScreen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="logo-icon">✦</div>
+      <h1>App Cá Nhân</h1>
+      <p>Đăng nhập để đồng bộ · <strong>Một tài khoản — nhiều thiết bị cùng lúc</strong></p>
+    </div>
+    <div class="auth-tabs">
+      <button type="button" class="auth-tab active" id="authTabLogin" onclick="switchAuthTab('login')">Đăng Nhập</button>
+      <button type="button" class="auth-tab" id="authTabRegister" onclick="switchAuthTab('register')">Đăng Ký</button>
+    </div>
+    <div class="auth-error" id="authError"></div>
+    <div class="auth-panel" id="authPanelLogin">
+      <div class="modal-row">
+        <label>Username</label>
+        <input class="input" id="loginUsername" placeholder="Tên đăng nhập" autocomplete="username"/>
+      </div>
+      <div class="modal-row">
+        <label>Password</label>
+        <input class="input" type="password" id="loginPassword" placeholder="Mật khẩu" autocomplete="current-password"/>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px;min-height:44px;" onclick="doLogin()">Đăng Nhập</button>
+      <button type="button" class="auth-forgot-link" onclick="switchAuthTab('forgot')">Quên mật khẩu?</button>
+      <p style="font-size:11px;color:var(--text3);margin-top:12px;text-align:center;">Đóng tab trình duyệt sẽ cần đăng nhập lại.</p>
+    </div>
+    <div class="auth-panel hidden" id="authPanelForgot">
+      <div class="modal-row">
+        <label>Username</label>
+        <input class="input" id="forgotUsername" placeholder="Nhập username cần lấy lại mật khẩu" autocomplete="username"/>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px;min-height:44px;" onclick="doForgotPassword()">Lấy lại mật khẩu</button>
+      <div class="auth-forgot-result hidden" id="forgotResult"></div>
+      <button type="button" class="auth-forgot-link" onclick="switchAuthTab('login')">← Quay lại đăng nhập</button>
+    </div>
+    <div class="auth-panel hidden" id="authPanelRegister">
+      <div class="modal-row">
+        <label>Tên hiển thị</label>
+        <input class="input" id="regDisplayName" placeholder="Ví dụ: Nguyễn Văn A"/>
+      </div>
+      <div class="modal-row">
+        <label>Username</label>
+        <input class="input" id="regUsername" placeholder="Chỉ chữ, số, gạch dưới" autocomplete="username"/>
+      </div>
+      <div class="modal-row">
+        <label>Password</label>
+        <input class="input" type="password" id="regPassword" placeholder="Mật khẩu" autocomplete="new-password"/>
+      </div>
+      <div class="modal-row">
+        <label>Xác nhận Password</label>
+        <input class="input" type="password" id="regPassword2" placeholder="Nhập lại mật khẩu" autocomplete="new-password"/>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px;min-height:44px;" onclick="doRegister()">Đăng Ký</button>
+    </div>
+    <div class="auth-loading hidden" id="authLoading">Đang tải dữ liệu…</div>
+  </div>
+</div>
+
+<div class="app-bg-image" id="appBgImage"></div>
+<div class="app-bg-overlay" id="appBgOverlay"></div>
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">✦</div>
+      <div class="logo-text" id="logoText">App Cá Nhân</div>
+    </div>
+    <div class="nav-item active" data-tab="finance" onclick="switchTab('finance')">
+      <span class="nav-icon">💰</span><span class="nav-label">Chi tiêu</span>
+    </div>
+    <div class="nav-item" data-tab="savings" onclick="switchTab('savings')">
+      <span class="nav-icon">🎯</span><span class="nav-label">Tiết kiệm</span>
+    </div>
+    <div class="nav-item" data-tab="tasks" onclick="switchTab('tasks')">
+      <span class="nav-icon">📋</span><span class="nav-label">Công việc</span>
+    </div>
+    <div class="nav-item" data-tab="journey" onclick="switchTab('journey')">
+      <span class="nav-icon">🏆</span><span class="nav-label">Hành trình</span>
+    </div>
+    <div class="nav-item" data-tab="time" onclick="switchTab('time')">
+      <span class="nav-icon">⏰</span><span class="nav-label">Thời Gian</span>
+    </div>
+    <div class="nav-item" data-tab="giaodien" onclick="switchTab('giaodien')">
+      <span class="nav-icon">🎨</span><span class="nav-label">Giao Diện</span>
+    </div>
+    <div style="flex:1;"></div>
+    <div class="sidebar-profile" id="sidebarProfile">
+      <img class="sidebar-avatar hidden" id="sidebarAvatar" alt=""/>
+      <div class="sidebar-avatar-ph" id="sidebarAvatarPh">👤</div>
+      <div class="sidebar-profile-name" id="sidebarProfileName">Bạn</div>
+    </div>
+    <div class="nav-item" data-tab="settings" onclick="switchTab('settings')">
+      <span class="nav-icon">⚙️</span><span class="nav-label">Cài đặt</span>
+    </div>
+    <div class="nav-item" onclick="syncNow()" style="margin-top:4px;">
+      <span class="nav-icon">🔄</span><span class="nav-label">Đồng bộ</span>
+    </div>
+    <div class="nav-item nav-logout" onclick="doLogout()">
+      <span class="nav-icon">🚪</span><span class="nav-label">Đăng Xuất</span>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="greeting">
+        <div class="greeting-title" id="greetingTitle">Xin chào! 👋</div>
+        <div class="greeting-sub" id="greetingDate"></div>
+      </div>
+      <div class="topbar-right">
+        <span class="sync-dot" id="syncDot" title="Đã đồng bộ"></span>
+        <span style="font-size:12px;color:var(--text2);" id="syncLabel"></span>
+        <button class="btn btn-ghost btn-sm" onclick="openSettings()">⚙️ Cài đặt</button>
+        <button class="btn btn-primary btn-sm" onclick="syncNow()">🔄 Sync</button>
+      </div>
+    </div>
+
+    <div id="version-inactive-banner" class="version-inactive-banner hidden" role="status">
+      <span>⛔ <strong>File này không đang được dùng</strong> — Telegram đã ngắt hoàn toàn. Bản active trên Sheet: <strong id="version-banner-active">—</strong>. Mở bản đó hoặc chốt bản này trong Cài đặt.</span>
+      <button type="button" class="btn btn-primary btn-sm" onclick="activateThisAppVersion()">✅ Chốt dùng bản này</button>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="switchTab('settings')">⚙️ Cài đặt</button>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+      <!-- ===== FINANCE TAB ===== -->
+      <div id="tab-finance" class="tab-with-noti">
+        <button type="button" class="module-noti-bell" id="bell-expense" onclick="openModuleNotiPanel('expense')" title="Cài thông báo Chi tiêu" aria-label="Thông báo Chi tiêu">🔔</button>
+        <!-- HẠN MỨC CHI TIÊU -->
+        <div class="spend-limit-card" id="spend-limit-section">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+            <div>
+              <div class="card-title" style="margin-bottom:4px;">📊 Hạn mức chi tiêu</div>
+              <div style="font-size:12px;color:var(--text2);">Dư/thâm hụt được cộng/trừ sang ngày hôm sau</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <label style="font-size:11px;color:var(--text2);font-weight:600;">Hạn mức tháng (VNĐ):</label>
+              <input class="input money-input" id="spend-monthly-limit" placeholder="6.000.000 = 6tr" style="width:160px;" onchange="saveSpendMonthlyLimit()"/>
+            </div>
+          </div>
+          <div class="spend-limit-hero">💰 Hôm nay được tiêu: <span id="spend-hero-amount">—</span></div>
+          <div class="spend-progress"><div class="spend-progress-fill ok" id="spend-progress-fill" style="width:0%;"></div></div>
+          <div class="spend-triple">
+            <div class="spend-triple-item"><div class="lbl">Hạn mức ngày</div><div class="val" id="sl-day-limit">—</div></div>
+            <div class="spend-triple-item"><div class="lbl">Đã tiêu</div><div class="val" id="sl-spent" style="color:var(--accent5);">—</div></div>
+            <div class="spend-triple-item"><div class="lbl">Còn lại</div><div class="val" id="sl-remain" style="color:var(--accent3);">—</div></div>
+          </div>
+          <div class="spend-input-row">
+            <div>
+              <label style="font-size:11px;color:var(--text2);font-weight:600;display:block;margin-bottom:4px;">Đã tiêu hôm nay (VNĐ)</label>
+              <input class="input money-input" id="spend-today-input" placeholder="500.000 = 500K"/>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="saveTodaySpend()">💾 Lưu</button>
+          </div>
+          <div class="spend-7day">
+            <div class="section-title" style="margin-bottom:8px;">📅 7 ngày gần nhất</div>
+            <table>
+              <thead><tr><th>Ngày</th><th>Được tiêu</th><th>Đã tiêu</th><th>Chênh lệch</th></tr></thead>
+              <tbody id="spend-7day-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card blue"><div class="stat-icon">💰</div><div class="stat-label">Thu nhập tháng này</div><div class="stat-val" id="s-income">0</div><div class="stat-sub">VNĐ</div></div>
+          <div class="stat-card red"><div class="stat-icon">💸</div><div class="stat-label">Tổng chi tiêu</div><div class="stat-val" id="s-expense">0</div><div class="stat-sub">VNĐ</div></div>
+          <div class="stat-card yellow"><div class="stat-icon">📦</div><div class="stat-label">Tích lũy & ĐT</div><div class="stat-val" id="s-saving">0</div><div class="stat-sub">VNĐ</div></div>
+          <div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-label">Còn lại</div><div class="stat-val" id="s-remain">0</div><div class="stat-sub" id="s-remain-lbl">VNĐ</div></div>
+        </div>
+
+        <div class="finance-toolbar">
+          <div class="year-nav">
+            <button class="btn btn-ghost btn-sm" onclick="changeYear(-1)" title="Năm trước">‹</button>
+            <span id="financeYearLabel"></span>
+            <button class="btn btn-ghost btn-sm" onclick="changeYear(1)" title="Năm sau">›</button>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="copyPrevMonth()">📋 Sao chép chi phí tháng trước</button>
+        </div>
+        <div class="month-tabs" id="monthTabs"></div>
+
+        <div class="finance-grid">
+          <!-- LEFT: INCOME + FIXED + LIVING -->
+          <div>
+            <!-- INCOME -->
+            <div class="card" style="margin-bottom:16px;">
+              <div class="card-header">
+                <div class="card-title"><span style="color:var(--accent3)">📈</span> Thu nhập</div>
+                <button class="btn btn-ghost btn-sm" onclick="addEntry('income')">+ Thêm</button>
+              </div>
+              <div id="income-list"></div>
+            </div>
+            <!-- FIXED EXPENSE -->
+            <div class="card" style="margin-bottom:16px;">
+              <div class="card-header">
+                <div class="card-title"><span style="color:var(--accent5)">🔒</span> Chi tiêu cố định</div>
+                <button class="btn btn-ghost btn-sm" onclick="addEntry('fixed')">+ Thêm</button>
+              </div>
+              <div id="fixed-list"></div>
+            </div>
+            <!-- LIVING EXPENSE -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><span style="color:var(--accent4)">🛒</span> Chi tiêu sinh hoạt</div>
+                <button class="btn btn-ghost btn-sm" onclick="addEntry('living')">+ Thêm</button>
+              </div>
+              <div id="living-list"></div>
+            </div>
+          </div>
+
+          <!-- RIGHT: SAVINGS + SUMMARY + NOTE -->
+          <div>
+            <!-- SAVINGS/INVEST -->
+            <div class="card" style="margin-bottom:16px;">
+              <div class="card-header">
+                <div class="card-title"><span style="color:var(--accent4)">💎</span> Tích lũy & Đầu tư</div>
+                <button class="btn btn-ghost btn-sm" onclick="addEntry('saving')">+ Thêm</button>
+              </div>
+              <div id="saving-list"></div>
+            </div>
+            <!-- SUMMARY -->
+            <div class="card" style="margin-bottom:16px;">
+              <div class="card-title" style="margin-bottom:12px;"><span>📊</span> Tổng kết tháng</div>
+              <div class="summary-box">
+                <div class="summary-line"><span class="label">Tổng thu nhập</span><span id="sum-income" style="color:var(--accent3);font-family:var(--mono);">0đ</span></div>
+                <div class="summary-line"><span class="label">Chi tiêu cố định</span><span id="sum-fixed" style="color:var(--accent5);font-family:var(--mono);">0đ</span></div>
+                <div class="summary-line"><span class="label">Chi tiêu sinh hoạt</span><span id="sum-living" style="color:var(--accent5);font-family:var(--mono);">0đ</span></div>
+                <div class="summary-line"><span class="label">Tích lũy & Đầu tư</span><span id="sum-saving" style="color:var(--accent4);font-family:var(--mono);">0đ</span></div>
+                <div class="summary-line total">
+                  <span id="remain-label">Còn lại</span>
+                  <span id="sum-remain" style="font-family:var(--mono);">0đ</span>
+                </div>
+              </div>
+            </div>
+            <!-- NOTE -->
+            <div class="card">
+              <div class="card-title" style="margin-bottom:12px;"><span>📝</span> Ghi chú tháng</div>
+              <textarea class="note-area" id="month-note" placeholder="Ghi chú cho tháng này..." onchange="saveNote()"></textarea>
+              <button class="btn btn-primary btn-sm" style="margin-top:8px;" onclick="saveNote()">💾 Lưu ghi chú</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SAVINGS TAB ===== -->
+      <div id="tab-savings" class="hidden tab-with-noti">
+        <button type="button" class="module-noti-bell" id="bell-savings" onclick="openModuleNotiPanel('savings')" title="Cài thông báo Tiết kiệm" aria-label="Thông báo Tiết kiệm">🔔</button>
+        <div class="stats-grid">
+          <div class="stat-card green"><div class="stat-icon">🎯</div><div class="stat-label">Mục tiêu năm</div><div class="stat-val" id="sv-goal">0</div><div class="stat-sub">VNĐ</div></div>
+          <div class="stat-card blue"><div class="stat-icon">📅</div><div class="stat-label">Mỗi tháng cần</div><div class="stat-val" id="sv-monthly">0</div><div class="stat-sub">VNĐ</div></div>
+          <div class="stat-card yellow"><div class="stat-icon">☀️</div><div class="stat-label">Mỗi ngày cần</div><div class="stat-val" id="sv-daily">0</div><div class="stat-sub">VNĐ</div></div>
+          <div class="stat-card purple"><div class="stat-icon">✅</div><div class="stat-label">Đã tích lũy</div><div class="stat-val" id="sv-saved">0</div><div class="stat-sub">VNĐ</div></div>
+        </div>
+
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header">
+            <div class="card-title">🎯 Mục tiêu tiết kiệm</div>
+            <button class="btn btn-ghost btn-sm" onclick="editSavingsGoal()">✏️ Chỉnh sửa</button>
+          </div>
+          <div class="savings-goal-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <div>
+                <div style="font-size:13px;color:var(--text2);">Mục tiêu: <span id="sv-goal-name" style="color:var(--text);font-weight:600;">Chưa đặt</span></div>
+                <div style="font-size:20px;font-weight:800;font-family:var(--mono);margin-top:4px;" id="sv-goal-display">0đ</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:12px;color:var(--text2);">Đã tích</div>
+                <div style="font-size:18px;font-weight:700;font-family:var(--mono);color:var(--accent3);" id="sv-saved-display">0đ</div>
+              </div>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="sv-progress" style="width:0%;background:linear-gradient(90deg,var(--accent3),var(--accent));"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);">
+              <span id="sv-pct">0%</span>
+              <span id="sv-remain-days"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📅 Lịch tiết kiệm theo ngày</div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-ghost btn-sm" onclick="prevSavMonth()">‹</button>
+              <span id="sav-month-label" style="font-size:13px;font-weight:700;align-self:center;"></span>
+              <button class="btn btn-ghost btn-sm" onclick="nextSavMonth()">›</button>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div style="font-size:12px;color:var(--text2);">Click vào ngày để đánh dấu đã tiết kiệm</div>
+            <div>Đã tích: <span id="sav-month-count" style="color:var(--accent3);font-weight:700;">0</span> ngày</div>
+          </div>
+          <div class="calendar-grid" id="savCalendar"></div>
+        </div>
+      </div>
+
+      <!-- ===== TASKS TAB ===== -->
+      <div id="tab-tasks" class="hidden tab-with-noti">
+        <button type="button" class="module-noti-bell" id="bell-task" onclick="openModuleNotiPanel('task')" title="Cài thông báo Công việc" aria-label="Thông báo Công việc">🔔</button>
+        <div class="stats-grid">
+          <div class="stat-card blue"><div class="stat-icon">📋</div><div class="stat-label">Tổng việc</div><div class="stat-val" id="t-total">0</div></div>
+          <div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-label">Hoàn thành</div><div class="stat-val" id="t-done">0</div></div>
+          <div class="stat-card yellow"><div class="stat-icon">⏳</div><div class="stat-label">Còn lại</div><div class="stat-val" id="t-pending">0</div></div>
+          <div class="stat-card red"><div class="stat-icon">🔥</div><div class="stat-label">Hôm nay</div><div class="stat-val" id="t-today">0</div></div>
+        </div>
+
+        <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="openAddTask()">+ Thêm việc</button>
+          <div class="task-filters">
+            <button class="filter-btn active" onclick="filterTasks('all',this)">Tất cả</button>
+            <button class="filter-btn" onclick="filterTasks('main',this)">Việc chính</button>
+            <button class="filter-btn" onclick="filterTasks('sub',this)">Việc phụ</button>
+            <button class="filter-btn" onclick="filterTasks('extra',this)">Phát sinh</button>
+            <button class="filter-btn" onclick="filterTasks('today',this)">Hôm nay</button>
+            <button class="filter-btn" onclick="filterTasks('overdue',this)">Quá hạn</button>
+            <button class="filter-btn" onclick="filterTasks('done',this)">Hoàn thành</button>
+          </div>
+        </div>
+
+        <div id="task-list"></div>
+      </div>
+
+      <!-- ===== JOURNEY TAB ===== -->
+      <div id="tab-journey" class="hidden tab-with-noti">
+        <button type="button" class="module-noti-bell" id="bell-journey" onclick="openModuleNotiPanel('journey')" title="Cài thông báo Hành trình" aria-label="Thông báo Hành trình">🔔</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;padding-right:44px;">
+          <div>
+            <div style="font-size:18px;font-weight:700;">🏆 Hành trình N ngày</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:4px;">Theo dõi thói quen — tick từng ngày, giữ streak 🔥</div>
+          </div>
+          <button class="btn btn-primary" onclick="openJourneyModal()">+ Thêm hành trình</button>
+        </div>
+        <div id="journey-list"></div>
+      </div>
+
+      <!-- ===== TIME / POMODORO TAB ===== -->
+      <div id="tab-time" class="hidden">
+        <div class="pomo-wrap">
+          <div style="margin-bottom:20px;">
+            <div style="font-size:18px;font-weight:700;">⏰ Pomodoro Timer</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:4px;">25 phút tập trung · 5 phút nghỉ ngơi</div>
+          </div>
+          <div class="stats-grid" style="margin-bottom:20px;">
+            <div class="stat-card purple"><div class="stat-icon">🍅</div><div class="stat-label">Hôm nay</div><div class="stat-val" id="pomo-today-count">0</div><div class="stat-sub">pomodoro</div></div>
+            <div class="stat-card blue"><div class="stat-icon">⏱️</div><div class="stat-label">Phiên hiện tại</div><div class="stat-val" id="pomo-mode-label" style="font-size:16px;">Làm việc</div><div class="stat-sub" id="pomo-mode-sub">25:00</div></div>
+          </div>
+          <div class="pomo-timer-card">
+            <div class="pomo-mode work" id="pomo-status">🎯 Thời gian làm việc</div>
+            <div class="pomo-display" id="pomo-display">25:00</div>
+            <div class="pomo-btns">
+              <button class="btn btn-primary" id="pomo-start-btn" onclick="pomoStartPause()">▶ Start</button>
+              <button class="btn btn-ghost" onclick="pomoReset()">↺ Reset</button>
+            </div>
+            <div class="pomo-ring"><div class="pomo-ring-fill" id="pomo-ring" style="width:100%;"></div></div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:10px;"><span>💡</span> Cách dùng</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.7;">
+              Nhấn <strong>Start</strong> để bắt đầu 25 phút làm việc. Khi hết giờ, app beep và chuyển sang 5 phút nghỉ.
+              Sau khi nghỉ xong, tự chuyển lại phiên làm việc. Mỗi pomodoro hoàn thành được cộng vào số 🍅 hôm nay.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== GIAO DIEN PAGE ===== -->
+      <div id="page-giaodien" class="hidden">
+        <div style="margin-bottom:20px;">
+          <div style="font-size:18px;font-weight:700;">🎨 Giao Diện</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:4px;">Tùy chỉnh theme, màu sắc, font — áp dụng ngay không cần tải lại</div>
+        </div>
+
+        <div class="settings-section">
+          <div class="card-title" style="margin-bottom:12px;">🌓 Theme có sẵn</div>
+          <p class="theme-upload-hint">Tải ảnh để làm <strong>hình nền toàn app</strong> (sidebar, nội dung, menu đều hiện ảnh phía sau). Chọn theme màu vẫn giữ được ảnh nền.</p>
+          <div class="theme-grid" id="themeGrid"></div>
+          <div class="modal-row" style="margin-top:14px;">
+            <label>Độ mờ nền ảnh (khi dùng hình): <span id="gd-overlay-val">40</span>%</label>
+            <input type="range" class="gd-slider" id="gd-overlay" min="0" max="90" value="40" oninput="onOverlayChange(this.value)"/>
+          </div>
+          <div class="gd-row" style="margin-top:10px;">
+            <label class="btn btn-ghost btn-sm" style="cursor:pointer;">📁 Tải hình khác
+              <input type="file" accept="image/*" class="hidden" id="gd-theme-file" onchange="uploadThemeImage(event)"/>
+            </label>
+            <button class="btn btn-danger btn-sm" onclick="removeThemeImage()">🗑️ Xoá ảnh theme</button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="card-title" style="margin-bottom:12px;">🎯 Màu chủ đạo</div>
+          <div class="gd-row">
+            <input type="color" class="color-accent" id="gd-accent" value="#4f9eff" oninput="onAccentPick(this.value)"/>
+            <button class="btn btn-ghost btn-sm" onclick="resetAccent()">↺ Reset màu mặc định</button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="card-title" style="margin-bottom:12px;">🔤 Font chữ</div>
+          <select class="input" id="gd-font" onchange="onFontChange(this.value)">
+            <option value="default">Mặc định (Sora)</option>
+            <option value="roboto">Roboto</option>
+            <option value="playfair">Playfair Display</option>
+            <option value="spacemono">Space Mono</option>
+            <option value="nunito">Nunito</option>
+          </select>
+        </div>
+
+        <div class="settings-section">
+          <div class="card-title" style="margin-bottom:12px;">📐 Bo góc card</div>
+          <label style="font-size:12px;color:var(--text2);">Bo góc: <span id="gd-radius-val">16</span>px</label>
+          <input type="range" class="gd-slider" id="gd-radius" min="0" max="20" value="16" oninput="onRadiusChange(this.value)"/>
+          <div class="gd-preview-card" id="gd-radius-preview">Preview card bo góc</div>
+        </div>
+
+        <div class="settings-section">
+          <div class="card-title" style="margin-bottom:12px;">👤 Ảnh đại diện & Cá nhân hoá</div>
+          <div class="gd-row" style="align-items:flex-start;">
+            <img class="avatar-preview hidden" id="gd-avatar-img" alt=""/>
+            <div class="avatar-preview-ph" id="gd-avatar-ph">👤</div>
+            <div style="flex:1;">
+              <label class="btn btn-ghost btn-sm" style="cursor:pointer;margin-bottom:10px;display:inline-flex;">📷 Upload ảnh đại diện
+                <input type="file" accept="image/*" class="hidden" id="gd-avatar-file" onchange="uploadAvatar(event)"/>
+              </label>
+              <div class="modal-row">
+                <label>Tên hiển thị</label>
+                <input class="input" id="gd-display-name" placeholder="Tên của bạn" onchange="saveAppearancePersonal()"/>
+              </div>
+              <div class="modal-row">
+                <label>Lời chào tuỳ chỉnh (dùng {name})</label>
+                <input class="input" id="gd-greeting" placeholder="Xin chào {name}! 👋" onchange="saveAppearancePersonal()"/>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:8px;">
+          <button class="btn btn-danger" onclick="resetAllTheme()">↺ Reset tất cả về mặc định</button>
+        </div>
+      </div>
+
+      <!-- ===== SETTINGS TAB ===== -->
+      <div id="tab-settings" class="hidden">
+        <div class="settings-section">
+          <div class="card-title" style="margin-bottom:16px;">👤 Thông tin cá nhân</div>
+          <div class="input-row">
+            <div class="modal-row">
+              <label>Tên của bạn</label>
+              <input class="input" id="cfg-name" placeholder="Nhập tên..." onchange="saveCfg()"/>
+            </div>
+            <div class="modal-row">
+              <label>Múi giờ</label>
+              <input class="input" value="Asia/Ho_Chi_Minh" readonly/>
+            </div>
+          </div>
+          <div class="modal-row" style="margin-top:12px;">
+            <label>Lời chào tùy chỉnh (buổi sáng)</label>
+            <input class="input" id="cfg-morning" placeholder="Chào buổi sáng {name}! ☀️" onchange="saveCfg()"/>
+          </div>
+          <div class="modal-row">
+            <label>Lời chào buổi chiều</label>
+            <input class="input" id="cfg-afternoon" placeholder="Buổi chiều vui vẻ {name}! 🌤️" onchange="saveCfg()"/>
+          </div>
+          <div class="modal-row">
+            <label>Lời chào buổi tối</label>
+            <input class="input" id="cfg-evening" placeholder="Chào buổi tối {name}! 🌙" onchange="saveCfg()"/>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="card-title" style="margin-bottom:12px;">📌 Phiên bản Active</div>
+          <div id="active-version-display" style="font-size:13px;line-height:1.6;color:var(--text2);">
+            Đang kiểm tra phiên bản…
+          </div>
+          <p style="font-size:11px;color:var(--text3);margin:10px 0;line-height:1.5;">Mỗi file HTML (gốc / bản sao) có mã version riêng. Chỉ khi bạn <strong>chốt</strong> thì Telegram mới gắn file đó — mở file cũ sẽ không cướp bot.</p>
+          <button type="button" class="btn btn-primary btn-sm" id="btn-activate-version" onclick="activateThisAppVersion()">✅ Chốt dùng bản này (gán Telegram)</button>
+        </div>
+
+        <div class="settings-section">
+          <div class="card-title" style="margin-bottom:12px;">📦 Google Sheet (backend cố định)</div>
+          <p style="font-size:12px;color:var(--text2);line-height:1.55;margin-bottom:12px;">
+            App chỉ dùng <strong>một Sheet</strong> gắn với Apps Script. Link Web App cấu hình <strong>một lần</strong> trong <code>config.js</code> (<code>GS_WEBAPP_URL</code>).
+            Sau này sửa code: <strong>Deploy → Manage deployments → Edit → New version</strong> — <em>giữ nguyên link</em>, dữ liệu user vẫn trong tab <code>Data_[username]</code>.
+          </p>
+          <div id="backend-sheet-info" style="font-size:12px;color:var(--text2);margin-bottom:12px;padding:10px 12px;background:var(--bg3);border-radius:var(--radius-sm);border:1px solid var(--border);">Chưa kiểm tra kết nối…</div>
+          <div class="modal-row">
+            <label>Link Web App (đọc từ file HTML — không đổi trong app)</label>
+            <input class="input" id="cfg-gsurl" readonly style="opacity:.9;cursor:default;font-size:11px;"/>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="testConnection()">🔗 Kiểm tra kết nối</button>
+            <button class="btn btn-ghost" onclick="syncNow()">🔄 Đồng bộ ngay</button>
+          </div>
+          <div id="conn-status" style="margin-top:8px;font-size:12px;color:var(--text2);"></div>
+        </div>
+
+        <div class="settings-section">
+          <div class="card-title" style="margin-bottom:16px;">🤖 Telegram Bot</div>
+          <div class="input-row">
+            <div class="modal-row">
+              <label>Bot Token</label>
+              <input class="input" id="cfg-tg-token" placeholder="1234567890:ABC..." onchange="saveCfg()"/>
+            </div>
+            <div class="modal-row">
+              <label>Chat ID</label>
+              <input class="input" id="cfg-tg-chatid" placeholder="123456789 hoặc -100..." onchange="saveCfg()"/>
+              <p style="font-size:11px;color:var(--text3);margin:6px 0 0;line-height:1.45;">Số ID (không phải @username). Chat cá nhân: nhắn bot <strong>/start</strong> trước → bấm «Lấy Chat ID». Nhóm: thêm bot vào nhóm, ID thường bắt đầu <code>-100</code>.</p>
+            </div>
+          </div>
+          <div id="tg-diagnostics" style="font-size:12px;line-height:1.6;color:var(--text2);margin:10px 0;padding:10px 12px;background:var(--bg3);border-radius:var(--radius-sm);border:1px solid var(--border);">Đang kiểm tra…</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+            <button class="btn btn-ghost btn-sm" type="button" onclick="discoverTelegramChatId()">🔍 Lấy Chat ID từ bot</button>
+            <button class="btn btn-primary btn-sm" onclick="testTelegram()">📤 Gửi tin thử</button>
+            <button class="btn btn-ghost btn-sm" onclick="quickTestNotiSchedule()">⏱️ Nhắc thử sau 2 phút</button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="card-title" style="margin-bottom:16px;">🔔 Nhắc nhở</div>
+          <p style="font-size:12px;color:var(--text2);margin:-8px 0 14px;line-height:1.5;">Cài lịch bằng <strong>🔔</strong> trên từng mục (tự lưu lên Sheet). <strong>Đóng app vẫn nhận Telegram</strong> qua Apps Script. Đăng nhập nhiều thiết bị: dữ liệu tự đồng bộ ~45 giây khi mở app.</p>
+          <div class="settings-row">
+            <div>
+              <div style="font-size:13px;font-weight:600;">Nhắc nhập chi tiêu cuối ngày</div>
+              <div style="font-size:12px;color:var(--text2);">Thông báo lúc tối để nhập chi tiêu</div>
+            </div>
+            <div class="toggle" id="tog-expense" onclick="toggleSetting('expense')"></div>
+          </div>
+          <div id="expense-noti-times" class="hidden" style="padding:8px 0 4px;">
+            <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">Giờ nhắc:</div>
+            <div class="noti-time-row" id="expense-times-list"></div>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <input type="time" class="input" id="new-expense-time" style="width:120px;" value="21:00"/>
+              <button class="btn btn-ghost btn-sm" onclick="addNotiTime('expense')">+ Thêm giờ</button>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div style="font-size:13px;font-weight:600;">Nhắc công việc sắp đến hạn</div>
+              <div style="font-size:12px;color:var(--text2);">Nhắc trước hạn 1 ngày lúc sáng</div>
+            </div>
+            <div class="toggle" id="tog-task" onclick="toggleSetting('task')"></div>
+          </div>
+          <div id="task-noti-times" class="hidden" style="padding:8px 0 4px;">
+            <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">Giờ nhắc:</div>
+            <div class="noti-time-row" id="task-times-list"></div>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <input type="time" class="input" id="new-task-time" style="width:120px;" value="08:00"/>
+              <button class="btn btn-ghost btn-sm" onclick="addNotiTime('task')">+ Thêm giờ</button>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div style="font-size:13px;font-weight:600;">Nhắc tiết kiệm hằng ngày</div>
+              <div style="font-size:12px;color:var(--text2);">Nhắc bỏ heo hằng ngày</div>
+            </div>
+            <div class="toggle" id="tog-savings" onclick="toggleSetting('savings')"></div>
+          </div>
+          <div id="savings-noti-times" class="hidden" style="padding:8px 0 4px;">
+            <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">Giờ nhắc:</div>
+            <div class="noti-time-row" id="savings-times-list"></div>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <input type="time" class="input" id="new-savings-time" style="width:120px;" value="09:00"/>
+              <button class="btn btn-ghost btn-sm" onclick="addNotiTime('savings')">+ Thêm giờ</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="card-title" style="margin-bottom:16px;">💾 Sao lưu dữ liệu</div>
+          <p style="font-size:12px;color:var(--text2);margin-bottom:12px;">Xuất/nhập file JSON để backup hoặc chuyển máy. Dữ liệu vẫn lưu trên trình duyệt (localStorage).</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-primary btn-sm" onclick="exportData()">⬇️ Xuất backup</button>
+            <label class="btn btn-ghost btn-sm" style="cursor:pointer;">
+              ⬆️ Nhập backup
+              <input type="file" accept=".json,application/json" class="hidden" id="importFile" onchange="importData(event)"/>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="card-title" style="margin-bottom:16px;">📊 Mục tiêu tiết kiệm năm</div>
+          <div class="input-row">
+            <div class="modal-row">
+              <label>Tên mục tiêu</label>
+              <input class="input" id="cfg-goal-name" placeholder="Ví dụ: Mua xe máy" onchange="saveCfg()"/>
+            </div>
+            <div class="modal-row">
+              <label>Số tiền mục tiêu (VNĐ)</label>
+              <input class="input money-input" id="cfg-goal-amount" placeholder="10.000.000 = 10tr" onchange="saveCfg();renderSavings();"/>
+            </div>
+          </div>
+          <div class="modal-row">
+            <label>Năm mục tiêu</label>
+            <input class="input" type="number" id="cfg-goal-year" onchange="saveCfg();renderSavings();" style="width:120px;"/>
+          </div>
+        </div>
+      </div>
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- Bottom navigation (mobile) -->
+<nav class="bottom-nav" id="bottomNav" aria-label="Menu chính">
+  <button type="button" class="bottom-nav-item active" data-tab="finance" onclick="switchTab('finance')">
+    <span class="bn-icon" aria-hidden="true">💰</span><span class="bn-label">Chi tiêu</span>
+  </button>
+  <button type="button" class="bottom-nav-item" data-tab="savings" onclick="switchTab('savings')">
+    <span class="bn-icon" aria-hidden="true">🎯</span><span class="bn-label">Tiết kiệm</span>
+  </button>
+  <button type="button" class="bottom-nav-item" data-tab="tasks" onclick="switchTab('tasks')">
+    <span class="bn-icon" aria-hidden="true">📋</span><span class="bn-label">Việc</span>
+  </button>
+  <button type="button" class="bottom-nav-item" data-tab="journey" onclick="switchTab('journey')">
+    <span class="bn-icon" aria-hidden="true">🏆</span><span class="bn-label">Hành trình</span>
+  </button>
+  <button type="button" class="bottom-nav-item" data-tab="time" onclick="switchTab('time')">
+    <span class="bn-icon" aria-hidden="true">⏰</span><span class="bn-label">Thời gian</span>
+  </button>
+  <button type="button" class="bottom-nav-item" data-tab="giaodien" onclick="switchTab('giaodien')">
+    <span class="bn-icon" aria-hidden="true">🎨</span><span class="bn-label">Giao diện</span>
+  </button>
+  <button type="button" class="bottom-nav-item" data-tab="settings" onclick="switchTab('settings')">
+    <span class="bn-icon" aria-hidden="true">⚙️</span><span class="bn-label">Cài đặt</span>
+  </button>
+</nav>
+
+<!-- MODALS -->
+<!-- Module notification panel -->
+<div class="modal-overlay hidden" id="moduleNotiModal">
+  <div class="modal" style="max-width:580px;">
+    <h2 id="moduleNotiTitle">🔔 Thông báo</h2>
+    <p style="font-size:12px;color:var(--text2);margin:-6px 0 14px;">Gửi qua Telegram Bot · Lưu localStorage &amp; đồng bộ Sheets</p>
+    <div id="moduleNotiBody"></div>
+    <div class="modal-footer" style="margin-top:16px;">
+      <button class="btn btn-ghost" onclick="closeModal('moduleNotiModal')">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Entry Modal -->
+<div class="modal-overlay hidden" id="entryModal">
+  <div class="modal">
+    <h2 id="entryModalTitle">Thêm mục</h2>
+    <input type="hidden" id="entryType"/>
+    <input type="hidden" id="entryEditIdx"/>
+    <div class="modal-row">
+      <label>Tên mục</label>
+      <input class="input" id="entryName" placeholder="Ví dụ: Lương, Tiền nhà..."/>
+    </div>
+    <div class="modal-row">
+      <label>Số tiền (VNĐ — 1.000.000 = 1tr)</label>
+      <input class="input money-input" id="entryAmount" placeholder="1.000.000 = 1tr"/>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('entryModal')">Hủy</button>
+      <button class="btn btn-primary" onclick="saveEntry()">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Task Modal -->
+<div class="modal-overlay hidden" id="taskModal">
+  <div class="modal">
+    <h2 id="taskModalTitle">Thêm công việc</h2>
+    <input type="hidden" id="taskEditIdx"/>
+    <div class="modal-row">
+      <label>Tên công việc</label>
+      <input class="input" id="taskName" placeholder="Tên việc cần làm..."/>
+    </div>
+    <div class="input-row">
+      <div class="modal-row">
+        <label>Loại việc</label>
+        <select class="input" id="taskType">
+          <option value="main">Việc chính</option>
+          <option value="sub">Việc phụ</option>
+          <option value="extra">Phát sinh</option>
+        </select>
+      </div>
+      <div class="modal-row">
+        <label>Hạn chót</label>
+        <input class="input" type="date" id="taskDue"/>
+      </div>
+      <div class="modal-row">
+        <label>Giờ hoàn thành</label>
+        <input class="input" type="time" id="taskDueTime"/>
+      </div>
+    </div>
+    <div class="input-row">
+      <div class="modal-row">
+        <label>Mục tiêu số lượng (VD: 20 video)</label>
+        <input class="input" type="number" id="taskTarget" placeholder="0 = không giới hạn"/>
+      </div>
+      <div class="modal-row">
+        <label>Đã hoàn thành</label>
+        <input class="input" type="number" id="taskProgress" placeholder="0"/>
+      </div>
+    </div>
+    <div class="modal-row">
+      <label>Đơn vị (VD: video, file, trang...)</label>
+      <input class="input" id="taskUnit" placeholder="video"/>
+    </div>
+    <div class="modal-row">
+      <label>Ghi chú</label>
+      <textarea class="note-area" id="taskNote" placeholder="Ghi chú thêm..." style="min-height:60px;"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('taskModal')">Hủy</button>
+      <button class="btn btn-primary" onclick="saveTask()">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- Savings Goal Modal -->
+<div class="modal-overlay hidden" id="savingsModal">
+  <div class="modal">
+    <h2>🎯 Chỉnh mục tiêu tiết kiệm</h2>
+    <div class="modal-row">
+      <label>Tên mục tiêu</label>
+      <input class="input" id="sv-name" placeholder="Ví dụ: Mua xe, Du lịch..."/>
+    </div>
+    <div class="modal-row">
+      <label>Số tiền mục tiêu (VNĐ)</label>
+      <input class="input money-input" id="sv-amount" placeholder="10.000.000 = 10tr"/>
+    </div>
+    <div class="modal-row">
+      <label>Năm mục tiêu</label>
+      <input class="input" type="number" id="sv-year" placeholder="2025"/>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('savingsModal')">Hủy</button>
+      <button class="btn btn-primary" onclick="applySavingsGoal()">Áp dụng</button>
+    </div>
+  </div>
+</div>
+
+<!-- Journey Modal -->
+<div class="modal-overlay hidden" id="journeyModal">
+  <div class="modal">
+    <h2 id="journeyModalTitle">🏆 Thêm hành trình</h2>
+    <input type="hidden" id="journeyEditId"/>
+    <div class="modal-row">
+      <label>Tên hành trình</label>
+      <input class="input" id="journeyName" placeholder="Ví dụ: 30 ngày đọc sách, 21 ngày gym..."/>
+    </div>
+    <div class="input-row">
+      <div class="modal-row">
+        <label>Số ngày (N)</label>
+        <input class="input" type="number" id="journeyDays" min="1" max="999" placeholder="30"/>
+      </div>
+      <div class="modal-row">
+        <label>Ngày bắt đầu</label>
+        <input class="input" type="date" id="journeyStart"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('journeyModal')">Hủy</button>
+      <button class="btn btn-primary" onclick="saveJourney()">Lưu</button>
+    </div>
+  </div>
+</div>
+
+</head>
+<body>
+
+<div class="auth-screen" id="authScreen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="logo-icon">✦</div>
+      <h1>App Cá Nhân</h1>
+      <p>Đăng nhập để đồng bộ · <strong>Một tài khoản — nhiều thiết bị cùng lúc</strong></p>
+    </div>
+    <div class="auth-tabs">
+      <button type="button" class="auth-tab active" id="authTabLogin" onclick="switchAuthTab('login')">Đăng Nhập</button>
+      <button type="button" class="auth-tab" id="authTabRegister" onclick="switchAuthTab('register')">Đăng Ký</button>
+    </div>
+    <div class="auth-error" id="authError"></div>
+    <div class="auth-panel" id="authPanelLogin">
+      <div class="modal-row">
+        <label>Username</label>
+        <input class="input" id="loginUsername" placeholder="Tên đăng nhập" autocomplete="username"/>
+      </div>
+      <div class="modal-row">
+        <label>Password</label>
+        <input class="input" type="password" id="loginPassword" placeholder="Mật khẩu" autocomplete="current-password"/>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px;min-height:44px;" onclick="doLogin()">Đăng Nhập</button>
+      <button type="button" class="auth-forgot-link" onclick="switchAuthTab('forgot')">Quên mật khẩu?</button>
+      <p style="font-size:11px;color:var(--text3);margin-top:12px;text-align:center;">Đóng tab trình duyệt sẽ cần đăng nhập lại.</p>
+    </div>
+    <div class="auth-panel hidden" id="authPanelForgot">
+      <div class="modal-row">
+        <label>Username</label>
+        <input class="input" id="forgotUsername" placeholder="Nhập username cần lấy lại mật khẩu" autocomplete="username"/>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px;min-height:44px;" onclick="doForgotPassword()">Lấy lại mật khẩu</button>
+      <div class="auth-forgot-result hidden" id="forgotResult"></div>
+      <button type="button" class="auth-forgot-link" onclick="switchAuthTab('login')">← Quay lại đăng nhập</button>
+    </div>
+    <div class="auth-panel hidden" id="authPanelRegister">
+      <div class="modal-row">
+        <label>Tên hiển thị</label>
+        <input class="input" id="regDisplayName" placeholder="Ví dụ: Nguyễn Văn A"/>
+      </div>
+      <div class="modal-row">
+        <label>Username</label>
+        <input class="input" id="regUsername" placeholder="Chỉ chữ, số, gạch dưới" autocomplete="username"/>
+      </div>
+      <div class="modal-row">
+        <label>Password</label>
+        <input class="input" type="password" id="regPassword" placeholder="Mật khẩu" autocomplete="new-password"/>
+      </div>
+      <div class="modal-row">
+        <label>Xác nhận Password</label>
+        <input class="input" type="password" id="regPassword2" placeholder="Nhập lại mật khẩu" autocomplete="new-password"/>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px;min-height:44px;" onclick="doRegister()">Đăng Ký</button>
+    </div>
+    <div class="auth-loading hidden" id="authLoading">Đang tải dữ liệu…</div>
+  </div>
+</div>
+
+<div class="app-bg-image" id="appBgImage"></div>
+<div class="app-bg-overlay" id="appBgOverlay"></div>
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">✦</div>
+      <div class="logo-text" id="logoText">App Cá Nhân</div>
+    </div>
+    <div class="nav-item active" data-tab="finance" onclick="switchTab('finance')">
+      <span class="nav-icon">💰</span><span class="nav-label">Chi tiêu</span>
+    </div>
+    <div class="nav-item" data-tab="savings" onclick="switchTab('savings')">
+      <span class="nav-icon">🎯</span><span class="nav-label">Tiết kiệm</span>
+    </div>
+    <div class="nav-item" data-tab="tasks" onclick="switchTab('tasks')">
+      <span class="nav-icon">📋</span><span class="nav-label">Công việc</span>
+    </div>
+    <div class="nav-item" data-tab="journey" onclick="switchTab('journey')">
+      <span class="nav-icon">🏆</span><span class="nav-label">Hành trình</span>
+    </div>
+    <div class="nav-item" data-tab="time" onclick="switchTab('time')">
+      <span class="nav-icon">⏰</span><span class="nav-label">Thời Gian</span>
+    </div>
+    <div class="nav-item" data-tab="giaodien" onclick="switchTab('giaodien')">
+      <span class="nav-icon">🎨</span><span class="nav-label">Giao Diện</span>
+    </div>
+    <div style="flex:1;"></div>
+    <div class="sidebar-profile" id="sidebarProfile">
+      <img class="sidebar-avatar hidden" id="sidebarAvatar" alt=""/>
+      <div class="sidebar-avatar-ph" id="sidebarAvatarPh">👤</div>
+      <div class="sidebar-profile-name" id="sidebarProfileName">Bạn</div>
+    </div>
+    <div class="nav-item" data-tab="settings" onclick="switchTab('settings')">
+      <span class="nav-icon">⚙️</span><span class="nav-label">Cài đặt</span>
+    </div>
+    <div class="nav-item" onclick="syncNow()" style="margin-top:4px;">
+      <span class="nav-icon">🔄</span><span class="nav-label">Đồng bộ</span>
+    </div>
+    <div class="nav-item nav-logout" onclick="doLogout()">
+      <span class="nav-icon">🚪</span><span class="nav-label">Đăng Xuất</span>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="greeting">
+        <div class="greeting-title" id="greetingTitle">Xin chào! 👋</div>
+        <div class="greeting-sub" id="greetingDate"></div>
+      </div>
+      <div class="topbar-right">
+        <span class="sync-dot" id="syncDot" title="Đã đồng bộ"></span>
+        <span style="font-size:12px;color:var(--text2);" id="syncLabel"></span>
+        <button class="btn btn-ghost btn-sm" onclick="openSettings()">⚙️ Cài đặt</button>
+        <button class="btn btn-primary btn-sm" onclick="syncNow()">🔄 Sync</button>
+      </div>
+    </div>
+
+    <div id="version-inactive-banner" class="version-inactive-banner hidden" role="status">
+      <span>⛔ <strong>File này không đang được dùng</strong> — Telegram đã ngắt hoàn toàn. Bản active trên Sheet: <strong id="version-banner-active">—</strong>. Mở bản đó hoặc chốt bản này trong Cài đặt.</span>
+      <button type="button" class="btn btn-primary btn-sm" onclick="activateThisAppVersion()">✅ Chốt dùng bản này</button>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="switchTab('settings')">⚙️ Cài đặt</button>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+      <!-- ===== FINANCE TAB ===== -->
+      <div id="tab-finance" class="tab-with-noti">
+        <button type="button" class="module-noti-bell" id="bell-expense" onclick="openModuleNotiPanel('expense')" title="Cài thông báo Chi tiêu" aria-label="Thông báo Chi tiêu">🔔</button>
+        <!-- HẠN MỨC CHI TIÊU -->
+        <div class="spend-limit-card" id="spend-limit-section">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+            <div>
+              <div class="card-title" style="margin-bottom:4px;">📊 Hạn mức chi tiêu</div>
+              <div style="font-size:12px;color:var(--text2);">Dư/thâm hụt được cộng/trừ sang ngày hôm sau</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <label style="font-size:11px;color:var(--text2);font-weight:600;">Hạn mức tháng (VNĐ):</label>
+              <input class="input money-input" id="spend-monthly-limit" placeholder="6.000.000 = 6tr" style="width:160px;" onchange="saveSpendMonthlyLimit()"/>
+            </div>
+          </div>
+          <div class="spend-limit-hero">💰 Hôm nay được tiêu: <span id="spend-hero-amount">—</span></div>
+          <div class="spend-progress"><div class="spend-progress-fill ok" id="spend-progress-fill" style="width:0%;"></div></div>
+          <div class="spend-triple">
+            <div class="spend-triple-item"><div class="lbl">Hạn mức ngày</div><div class="val" id="sl-day-limit">—</div></div>
+            <div class="spend-triple-item"><div class="lbl">Đã tiêu</div><div class="val" id="sl-spent" style="color:var(--accent5);">—</div></div>
+            <div class="spend-triple-item"><div class="lbl">Còn lại</div><div class="val" id="sl-remain" style="color:var(--accent3);">—</div></div>
+          </div>
+          <div class="spend-input-row">
+            <div>
+              <label style="font-size:11px;color:var(--text2);font-weight:600;display:block;margin-bottom:4px;">Đã tiêu hôm nay (VNĐ)</label>
+              <input class="input money-input" id="spend-today-input" placeholder="500.000 = 500K"/>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="saveTodaySpend()">💾 Lưu</button>
+          </div>
+          <div class="spend-7day">
+            <div class="section-title" style="margin-bottom:8px;">📅 7 ngày gần nhất</div>
+            <table>
+              <thead><tr><th>Ngày</th><th>Được tiêu</th><th>Đã tiêu</th><th>Chênh lệch</th></tr></thead>
+              <tbody id="spend-7day-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card blue"><div class="stat-icon">💰</div><div class="stat-label">Thu nhập tháng này</div><div class="stat-val" id="s-income">0</div><div class="stat-sub">VNĐ</div></div>
+          <div class="stat-card red"><div class="stat-icon">💸</div><div class="stat-label">Tổng chi tiêu</div><div class="stat-val" id="s-expense">0</div><div class="stat-sub">VNĐ</div></div>
+          <div class="stat-card yellow"><div class="stat-icon">📦</div><div class="stat-label">Tích lũy & ĐT</div><div class="stat-val" id="s-saving">0</div><div class="stat-sub">VNĐ</div></div>
+          <div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-label">Còn lại</div><div class="stat-val" id="s-remain">0</div><div class="stat-sub" id="s-remain-lbl">VNĐ</div></div>
+        </div>
+
+        <div class="finance-toolbar">
+          <div class="year-nav">
+            <button class="btn btn-ghost btn-sm" onclick="changeYear(-1)" title="Năm trước">‹</button>
+            <span id="financeYearLabel"></span>
+            <button class="btn btn-ghost btn-sm" onclick="changeYear(1)" title="Năm sau">›</button>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="copyPrevMonth()">📋 Sao chép chi phí tháng trước</button>
+        </div>
+        <div class="month-tabs" id="monthTabs"></div>
+
+        <div class="finance-grid">
+          <!-- LEFT: INCOME + FIXED + LIVING -->
+          <div>
+            <!-- INCOME -->
+            <div class="card" style="margin-bottom:16px;">
+              <div class="card-header">
+                <div class="card-title"><span style="color:var(--accent3)">📈</span> Thu nhập</div>
+                <button class="btn btn-ghost btn-sm" onclick="addEntry('income')">+ Thêm</button>
+              </div>
+              <div id="income-list"></div>
+            </div>
+            <!-- FIXED EXPENSE -->
+            <div class="card" style="margin-bottom:16px;">
+              <div class="card-header">
+                <div class="card-title"><span style="color:var(--accent5)">🔒</span> Chi tiêu cố định</div>
+                <button class="btn btn-ghost btn-sm" onclick="addEntry('fixed')">+ Thêm</button>
+              </div>
+              <div id="fixed-list"></div>
+            </div>
+            <!-- LIVING EXPENSE -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><span style="color:var(--accent4)">🛒</span> Chi tiêu sinh hoạt</div>
+                <button class="btn btn-ghost btn-sm" onclick="addEntry('living')">+ Thêm</button>
+              </div>
+              <div id="living-list"></div>
+            </div>
+          </div>
+
+          <!-- RIGHT: SAVINGS + SUMMARY + NOTE -->
+          <div>
+            <!-- SAVINGS/INVEST -->
+            <div class="card" style="margin-bottom:16px;">
+              <div class="card-header">
+                <div class="card-title"><span style="color:var(--accent4)">💎</span> Tích lũy & Đầu tư</div>
+                <button class="btn btn-ghost btn-sm" onclick="addEntry('saving')">+ Thêm</button>
+              </div>
+              <div id="saving-list"></div>
+            </div>
+            <!-- SUMMARY -->
+            <div class="card" style="margin-bottom:16px;">
+              <div class="card-title" style="margin-bottom:12px;"><span>📊</span> Tổng kết tháng</div>
+              <div class="summary-box">
+                <div class="summary-line"><span class="label">Tổng thu nhập</span><span id="sum-income" style="color:var(--accent3);font-family:var(--mono);">0đ</span></div>
+                <div class="summary-line"><span class="label">Chi tiêu cố định</span><span id="sum-fixed" style="color:var(--accent5);font-family:var(--mono);">0đ</span></div>
+                <div class="summary-line"><span class="label">Chi tiêu sinh hoạt</span><span id="sum-living" style="color:var(--accent5);font-family:var(--mono);">0đ</span></div>
+                <div class="summary-line"><span class="label">Tích lũy & Đầu tư</span><span id="sum-saving" style="color:var(--accent4);font-family:var(--mono);">0đ</span></div>
+                <div class="summary-line total">
+                  <span id="remain-label">Còn lại</span>
+                  <span id="sum-remain" style="font-family:var(--mono);">0đ</span>
+                </div>
+              </div>
+            </div>
+            <!-- NOTE -->
+            <div class="card">
+              <div class="card-title" style="margin-bottom:12px;"><span>📝</span> Ghi chú tháng</div>
+              <textarea class="note-area" id="month-note" placeholder="Ghi chú cho tháng này..." onchange="saveNote()"></textarea>
+              <button class="btn btn-primary btn-sm" style="margin-top:8px;" onclick="saveNote()">💾 Lưu ghi chú</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SAVINGS TAB ===== -->
+      <div id="tab-savings" class="hidden tab-with-noti">
+        <button type="button" class="module-noti-bell" id="bell-savings" onclick="openModuleNotiPanel('savings')" title="Cài thông báo Tiết kiệm" aria-label="Thông báo Tiết kiệm">🔔</button>
+        <div class="stats-grid">
+          <div class="stat-card green"><div class="stat-icon">🎯</div><div class="stat-label">Mục tiêu năm</div><div class="stat-val" id="sv-goal">0</div><div class="stat-sub">VNĐ</div></div>
+          <div class="stat-card blue"><div class="stat-icon">📅</div><div class="stat-label">Mỗi tháng cần</div><div class="stat-val" id="sv-monthly">0</div><div class="stat-sub">VNĐ</div></div>
+          <div class="stat-card yellow"><div class="stat-icon">☀️</div><div class="stat-label">Mỗi ngày cần</div><div class="stat-val" id="sv-daily">0</div><div class="stat-sub">VNĐ</div></div>
+          <div class="stat-card purple"><div class="stat-icon">✅</div><div class="stat-label">Đã tích lũy</div><div class="stat-val" id="sv-saved">0</div><div class="stat-sub">VNĐ</div></div>
+        </div>
+
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header">
+            <div class="card-title">🎯 Mục tiêu tiết kiệm</div>
+            <button class="btn btn-ghost btn-sm" onclick="editSavingsGoal()">✏️ Chỉnh sửa</button>
+          </div>
+          <div class="savings-goal-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <div>
+                <div style="font-size:13px;color:var(--text2);">Mục tiêu: <span id="sv-goal-name" style="color:var(--text);font-weight:600;">Chưa đặt</span></div>
+                <div style="font-size:20px;font-weight:800;font-family:var(--mono);margin-top:4px;" id="sv-goal-display">0đ</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:12px;color:var(--text2);">Đã tích</div>
+                <div style="font-size:18px;font-weight:700;font-family:var(--mono);color:var(--accent3);" id="sv-saved-display">0đ</div>
+              </div>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="sv-progress" style="width:0%;background:linear-gradient(90deg,var(--accent3),var(--accent));"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);">
+              <span id="sv-pct">0%</span>
+              <span id="sv-remain-days"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📅 Lịch tiết kiệm theo ngày</div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-ghost btn-sm" onclick="prevSavMonth()">‹</button>
+              <span id="sav-month-label" style="font-size:13px;font-weight:700;align-self:center;"></span>
+              <button class="btn btn-ghost btn-sm" onclick="nextSavMonth()">›</button>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div style="font-size:12px;color:var(--text2);">Click vào ngày để đánh dấu đã tiết kiệm</div>
+            <div>Đã tích: <span id="sav-month-count" style="color:var(--accent3);font-weight:700;">0</span> ngày</div>
+          </div>
+          <div class="calendar-grid" id="savCalendar"></div>
+        </div>
+      </div>
+
+      <!-- ===== TASKS TAB ===== -->
+      <div id="tab-tasks" class="hidden tab-with-noti">
+        <button type="button" class="module-noti-bell" id="bell-task" onclick="openModuleNotiPanel('task')" title="Cài thông báo Công việc" aria-label="Thông báo Công việc">🔔</button>
+        <div class="stats-grid">
+          <div class="stat-card blue"><div class="stat-icon">📋</div><div class="stat-label">Tổng việc</div><div class="stat-val" id="t-total">0</div></div>
+          <div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-label">Hoàn thành</div><div class="stat-val" id="t-done">0</div></div>
+          <div class="stat-card yellow"><div class="stat-icon">⏳</div><div class="stat-label">Còn lại</div><div class="stat-val" id="t-pending">0</div></div>
+          <div class="stat-card red"><div class="stat-icon">🔥</div><div class="stat-label">Hôm nay</div><div class="stat-val" id="t-today">0</div></div>
+        </div>
+
+        <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="openAddTask()">+ Thêm việc</button>
+          <div class="task-filters">
+            <button class="filter-btn active" onclick="filterTasks('all',this)">Tất cả</button>
+            <button class="filter-btn" onclick="filterTasks('main',this)">Việc chính</button>
+            <button class="filter-btn" onclick="filterTasks('sub',this)">Việc phụ</button>
+            <button class="filter-btn" onclick="filterTasks('extra',this)">Phát sinh</button>
+            <button class="filter-btn" onclick="filterTasks('today',this)">Hôm nay</button>
+            <button class="filter-btn" onclick="filterTasks('overdue',this)">Quá hạn</button>
+            <button class="filter-btn" onclick="filterTasks('done',this)">Hoàn thành</button>
+          </div>
+        </div>
+
+        <div id="task-list"></div>
+      </div>
+
+      <!-- ===== JOURNEY TAB ===== -->
+      <div id="tab-journey" class="hidden tab-with-noti">
+        <button type="button" class="module-noti-bell" id="bell-journey" onclick="openModuleNotiPanel('journey')" title="Cài thông báo Hành trình" aria-label="Thông báo Hành trình">🔔</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;padding-right:44px;">
+          <div>
+            <div style="font-size:18px;font-weight:700;">🏆 Hành trình N ngày</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:4px;">Theo dõi thói quen — tick từng ngày, giữ streak 🔥</div>
+          </div>
+          <button class="btn btn-primary" onclick="openJourneyModal()">+ Thêm hành trình</button>
+        </div>
+        <div id="journey-list"></div>
+      </div>
+
+      <!-- ===== TIME / POMODORO TAB ===== -->
+      <div id="tab-time" class="hidden">
+        <div class="pomo-wrap">
+          <div style="margin-bottom:20px;">
+            <div style="font-size:18px;font-weight:700;">⏰ Pomodoro Timer</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:4px;">25 phút tập trung · 5 phút nghỉ ngơi</div>
+          </div>
+          <div class="stats-grid" style="margin-bottom:20px;">
+            <div class="stat-card purple"><div class="stat-icon">🍅</div><div class="stat-label">Hôm nay</div><div class="stat-val" id="pomo-today-count">0</div><div class="stat-sub">pomodoro</div></div>
+            <div class="stat-card blue"><div class="stat-icon">⏱️</div><div class="stat-label">Phiên hiện tại</div><div class="stat-val" id="pomo-mode-label" style="font-size:16px;">Làm việc</div><div class="stat-sub" id="pomo-mode-sub">25:00</div></div>
+          </div>
+          <div class="pomo-timer-card">
+            <div class="pomo-mode work" id="pomo-status">🎯 Thời gian làm việc</div>
+            <div class="pomo-display" id="pomo-display">25:00</div>
+            <div class="pomo-btns">
+              <button class="btn btn-primary" id="pomo-start-btn" onclick="pomoStartPause()">▶ Start</button>
+              <button class="btn btn-ghost" onclick="pomoReset()">↺ Reset</button>
+            </div>
+            <div class="pomo-ring"><div class="pomo-ring-fill" id="pomo-ring" style="width:100%;"></div></div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:10px;"><span>💡</span> Cách dùng</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.7;">
+              Nhấn <strong>Start</strong> để bắt đầu 25 phút làm việc. Khi hết giờ, app beep và chuyển sang 5 phút nghỉ.
+              Sau khi nghỉ xong, tự chuyển lại phiên làm việc. Mỗi pomodoro hoàn thành được cộng vào số 🍅 hôm nay.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== GIAO DIEN PAGE ===== -->
+      <div id="page-giaodien" class="hidden">
+        <div style="margin-bottom:20px;">
+          <div style="font-size:18px;font-weight:700;">🎨 Giao Diện</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:4px;">Tùy chỉnh theme, màu sắc, font — áp dụng ngay không cần tải lại</div>
+        </div>
+
+        <div class="settings-section">
+          <div class="card-title" style="margin-bottom:12px;">🌓 Theme có sẵn</div>
+          <p class="theme-upload-hint">Tải ảnh để làm <strong>hình nền toàn app</strong> (sidebar, nội dung, menu đều hiện ảnh phía sau). Chọn theme màu vẫn giữ được ảnh nền.</p>
+          <div class="theme-grid" id="themeGrid"></div>
+          <div class="modal-row" style="margin-top:14px;">
+            <label>Độ mờ nền ảnh (khi dùng hình): <span id="gd-overlay-val">40</span>%</label>
+            <input type="range" class="gd-slider" id="gd-overlay" min="0" max="90" value="40" oninput="onOverlayChange(this.value)"/>
+          </div>
+          <div class="gd-row" style="margin-top:10px;">
+            <label class="btn btn-ghost btn-sm" style="cursor:pointer;">📁 Tải hình khác
+              <input type="file" accept="image/*" class="hidden" id="gd-theme-file" onchange="uploadThemeImage(event)"/>
+            </label>
+            <button class="btn btn-danger btn-sm" onclick="removeThemeImage()">🗑️ Xoá ảnh theme</button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="card-title" style="margin-bottom:12px;">🎯 Màu chủ đạo</div>
+          <div class="gd-row">
+            <input type="color" class="color-accent" id="gd-accent" value="#4f9eff" oninput="onAccentPick(this.value)"/>
+            <button class="btn btn-ghost btn-sm" onclick="resetAccent()">↺ Reset màu mặc định</button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="card-title" style="margin-bottom:12px;">🔤 Font chữ</div>
+          <select class="input" id="gd-font" onchange="onFontChange(this.value)">
+            <option value="default">Mặc định (Sora)</option>
+            <option value="roboto">Roboto</option>
+            <option value="playfair">Playfair Display</option>
+            <option value="spacemono">Space Mono</option>
+            <option value="nunito">Nunito</option>
+          </select>
+        </div>
+
+        <div class="settings-section">
+          <div class="card-title" style="margin-bottom:12px;">📐 Bo góc card</div>
+          <label style="font-size:12px;color:var(--text2);">Bo góc: <span id="gd-radius-val">16</span>px</label>
+          <input type="range" class="gd-slider" id="gd-radius" min="0" max="20" value="16" oninput="onRadiusChange(this.value)"/>
+          <div class="gd-preview-card" id="gd-radius-preview">Preview card bo góc</div>
+        </div>
+
+        <div class="settings-section">
+          <div class="card-title" style="margin-bottom:12px;">👤 Ảnh đại diện & Cá nhân hoá</div>
+          <div class="gd-row" style="align-items:flex-start;">
+            <img class="avatar-preview hidden" id="gd-avatar-img" alt=""/>
+            <div class="avatar-preview-ph" id="gd-avatar-ph">👤</div>
+            <div style="flex:1;">
+              <label class="btn btn-ghost btn-sm" style="cursor:pointer;margin-bottom:10px;display:inline-flex;">📷 Upload ảnh đại diện
+                <input type="file" accept="image/*" class="hidden" id="gd-avatar-file" onchange="uploadAvatar(event)"/>
+              </label>
+              <div class="modal-row">
+                <label>Tên hiển thị</label>
+                <input class="input" id="gd-display-name" placeholder="Tên của bạn" onchange="saveAppearancePersonal()"/>
+              </div>
+              <div class="modal-row">
+                <label>Lời chào tuỳ chỉnh (dùng {name})</label>
+                <input class="input" id="gd-greeting" placeholder="Xin chào {name}! 👋" onchange="saveAppearancePersonal()"/>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:8px;">
+          <button class="btn btn-danger" onclick="resetAllTheme()">↺ Reset tất cả về mặc định</button>
+        </div>
+      </div>
+
+      <!-- ===== SETTINGS TAB ===== -->
+      <div id="tab-settings" class="hidden">
+        <div class="settings-section">
+          <div class="card-title" style="margin-bottom:16px;">👤 Thông tin cá nhân</div>
+          <div class="input-row">
+            <div class="modal-row">
+              <label>Tên của bạn</label>
+              <input class="input" id="cfg-name" placeholder="Nhập tên..." onchange="saveCfg()"/>
+            </div>
+            <div class="modal-row">
+              <label>Múi giờ</label>
+              <input class="input" value="Asia/Ho_Chi_Minh" readonly/>
+            </div>
+          </div>
+          <div class="modal-row" style="margin-top:12px;">
+            <label>Lời chào tùy chỉnh (buổi sáng)</label>
+            <input class="input" id="cfg-morning" placeholder="Chào buổi sáng {name}! ☀️" onchange="saveCfg()"/>
+          </div>
+          <div class="modal-row">
+            <label>Lời chào buổi chiều</label>
+            <input class="input" id="cfg-afternoon" placeholder="Buổi chiều vui vẻ {name}! 🌤️" onchange="saveCfg()"/>
+          </div>
+          <div class="modal-row">
+            <label>Lời chào buổi tối</label>
+            <input class="input" id="cfg-evening" placeholder="Chào buổi tối {name}! 🌙" onchange="saveCfg()"/>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="card-title" style="margin-bottom:12px;">📌 Phiên bản Active</div>
+          <div id="active-version-display" style="font-size:13px;line-height:1.6;color:var(--text2);">
+            Đang kiểm tra phiên bản…
+          </div>
+          <p style="font-size:11px;color:var(--text3);margin:10px 0;line-height:1.5;">Mỗi file HTML (gốc / bản sao) có mã version riêng. Chỉ khi bạn <strong>chốt</strong> thì Telegram mới gắn file đó — mở file cũ sẽ không cướp bot.</p>
+          <button type="button" class="btn btn-primary btn-sm" id="btn-activate-version" onclick="activateThisAppVersion()">✅ Chốt dùng bản này (gán Telegram)</button>
+        </div>
+
+        <div class="settings-section">
+          <div class="card-title" style="margin-bottom:12px;">📦 Google Sheet (backend cố định)</div>
+          <p style="font-size:12px;color:var(--text2);line-height:1.55;margin-bottom:12px;">
+            App chỉ dùng <strong>một Sheet</strong> gắn với Apps Script. Link Web App cấu hình <strong>một lần</strong> trong <code>config.js</code> (<code>GS_WEBAPP_URL</code>).
+            Sau này sửa code: <strong>Deploy → Manage deployments → Edit → New version</strong> — <em>giữ nguyên link</em>, dữ liệu user vẫn trong tab <code>Data_[username]</code>.
+          </p>
+          <div id="backend-sheet-info" style="font-size:12px;color:var(--text2);margin-bottom:12px;padding:10px 12px;background:var(--bg3);border-radius:var(--radius-sm);border:1px solid var(--border);">Chưa kiểm tra kết nối…</div>
+          <div class="modal-row">
+            <label>Link Web App (đọc từ file HTML — không đổi trong app)</label>
+            <input class="input" id="cfg-gsurl" readonly style="opacity:.9;cursor:default;font-size:11px;"/>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="testConnection()">🔗 Kiểm tra kết nối</button>
+            <button class="btn btn-ghost" onclick="syncNow()">🔄 Đồng bộ ngay</button>
+          </div>
+          <div id="conn-status" style="margin-top:8px;font-size:12px;color:var(--text2);"></div>
+        </div>
+
+        <div class="settings-section">
+          <div class="card-title" style="margin-bottom:16px;">🤖 Telegram Bot</div>
+          <div class="input-row">
+            <div class="modal-row">
+              <label>Bot Token</label>
+              <input class="input" id="cfg-tg-token" placeholder="1234567890:ABC..." onchange="saveCfg()"/>
+            </div>
+            <div class="modal-row">
+              <label>Chat ID</label>
+              <input class="input" id="cfg-tg-chatid" placeholder="123456789 hoặc -100..." onchange="saveCfg()"/>
+              <p style="font-size:11px;color:var(--text3);margin:6px 0 0;line-height:1.45;">Số ID (không phải @username). Chat cá nhân: nhắn bot <strong>/start</strong> trước → bấm «Lấy Chat ID». Nhóm: thêm bot vào nhóm, ID thường bắt đầu <code>-100</code>.</p>
+            </div>
+          </div>
+          <div id="tg-diagnostics" style="font-size:12px;line-height:1.6;color:var(--text2);margin:10px 0;padding:10px 12px;background:var(--bg3);border-radius:var(--radius-sm);border:1px solid var(--border);">Đang kiểm tra…</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+            <button class="btn btn-ghost btn-sm" type="button" onclick="discoverTelegramChatId()">🔍 Lấy Chat ID từ bot</button>
+            <button class="btn btn-primary btn-sm" onclick="testTelegram()">📤 Gửi tin thử</button>
+            <button class="btn btn-ghost btn-sm" onclick="quickTestNotiSchedule()">⏱️ Nhắc thử sau 2 phút</button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="card-title" style="margin-bottom:16px;">🔔 Nhắc nhở</div>
+          <p style="font-size:12px;color:var(--text2);margin:-8px 0 14px;line-height:1.5;">Cài lịch bằng <strong>🔔</strong> trên từng mục (tự lưu lên Sheet). <strong>Đóng app vẫn nhận Telegram</strong> qua Apps Script. Đăng nhập nhiều thiết bị: dữ liệu tự đồng bộ ~45 giây khi mở app.</p>
+          <div class="settings-row">
+            <div>
+              <div style="font-size:13px;font-weight:600;">Nhắc nhập chi tiêu cuối ngày</div>
+              <div style="font-size:12px;color:var(--text2);">Thông báo lúc tối để nhập chi tiêu</div>
+            </div>
+            <div class="toggle" id="tog-expense" onclick="toggleSetting('expense')"></div>
+          </div>
+          <div id="expense-noti-times" class="hidden" style="padding:8px 0 4px;">
+            <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">Giờ nhắc:</div>
+            <div class="noti-time-row" id="expense-times-list"></div>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <input type="time" class="input" id="new-expense-time" style="width:120px;" value="21:00"/>
+              <button class="btn btn-ghost btn-sm" onclick="addNotiTime('expense')">+ Thêm giờ</button>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div style="font-size:13px;font-weight:600;">Nhắc công việc sắp đến hạn</div>
+              <div style="font-size:12px;color:var(--text2);">Nhắc trước hạn 1 ngày lúc sáng</div>
+            </div>
+            <div class="toggle" id="tog-task" onclick="toggleSetting('task')"></div>
+          </div>
+          <div id="task-noti-times" class="hidden" style="padding:8px 0 4px;">
+            <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">Giờ nhắc:</div>
+            <div class="noti-time-row" id="task-times-list"></div>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <input type="time" class="input" id="new-task-time" style="width:120px;" value="08:00"/>
+              <button class="btn btn-ghost btn-sm" onclick="addNotiTime('task')">+ Thêm giờ</button>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div style="font-size:13px;font-weight:600;">Nhắc tiết kiệm hằng ngày</div>
+              <div style="font-size:12px;color:var(--text2);">Nhắc bỏ heo hằng ngày</div>
+            </div>
+            <div class="toggle" id="tog-savings" onclick="toggleSetting('savings')"></div>
+          </div>
+          <div id="savings-noti-times" class="hidden" style="padding:8px 0 4px;">
+            <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">Giờ nhắc:</div>
+            <div class="noti-time-row" id="savings-times-list"></div>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <input type="time" class="input" id="new-savings-time" style="width:120px;" value="09:00"/>
+              <button class="btn btn-ghost btn-sm" onclick="addNotiTime('savings')">+ Thêm giờ</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="card-title" style="margin-bottom:16px;">💾 Sao lưu dữ liệu</div>
+          <p style="font-size:12px;color:var(--text2);margin-bottom:12px;">Xuất/nhập file JSON để backup hoặc chuyển máy. Dữ liệu vẫn lưu trên trình duyệt (localStorage).</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-primary btn-sm" onclick="exportData()">⬇️ Xuất backup</button>
+            <label class="btn btn-ghost btn-sm" style="cursor:pointer;">
+              ⬆️ Nhập backup
+              <input type="file" accept=".json,application/json" class="hidden" id="importFile" onchange="importData(event)"/>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="card-title" style="margin-bottom:16px;">📊 Mục tiêu tiết kiệm năm</div>
+          <div class="input-row">
+            <div class="modal-row">
+              <label>Tên mục tiêu</label>
+              <input class="input" id="cfg-goal-name" placeholder="Ví dụ: Mua xe máy" onchange="saveCfg()"/>
+            </div>
+            <div class="modal-row">
+              <label>Số tiền mục tiêu (VNĐ)</label>
+              <input class="input money-input" id="cfg-goal-amount" placeholder="10.000.000 = 10tr" onchange="saveCfg();renderSavings();"/>
+            </div>
+          </div>
+          <div class="modal-row">
+            <label>Năm mục tiêu</label>
+            <input class="input" type="number" id="cfg-goal-year" onchange="saveCfg();renderSavings();" style="width:120px;"/>
+          </div>
+        </div>
+      </div>
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- Bottom navigation (mobile) -->
+<nav class="bottom-nav" id="bottomNav" aria-label="Menu chính">
+  <button type="button" class="bottom-nav-item active" data-tab="finance" onclick="switchTab('finance')">
+    <span class="bn-icon" aria-hidden="true">💰</span><span class="bn-label">Chi tiêu</span>
+  </button>
+  <button type="button" class="bottom-nav-item" data-tab="savings" onclick="switchTab('savings')">
+    <span class="bn-icon" aria-hidden="true">🎯</span><span class="bn-label">Tiết kiệm</span>
+  </button>
+  <button type="button" class="bottom-nav-item" data-tab="tasks" onclick="switchTab('tasks')">
+    <span class="bn-icon" aria-hidden="true">📋</span><span class="bn-label">Việc</span>
+  </button>
+  <button type="button" class="bottom-nav-item" data-tab="journey" onclick="switchTab('journey')">
+    <span class="bn-icon" aria-hidden="true">🏆</span><span class="bn-label">Hành trình</span>
+  </button>
+  <button type="button" class="bottom-nav-item" data-tab="time" onclick="switchTab('time')">
+    <span class="bn-icon" aria-hidden="true">⏰</span><span class="bn-label">Thời gian</span>
+  </button>
+  <button type="button" class="bottom-nav-item" data-tab="giaodien" onclick="switchTab('giaodien')">
+    <span class="bn-icon" aria-hidden="true">🎨</span><span class="bn-label">Giao diện</span>
+  </button>
+  <button type="button" class="bottom-nav-item" data-tab="settings" onclick="switchTab('settings')">
+    <span class="bn-icon" aria-hidden="true">⚙️</span><span class="bn-label">Cài đặt</span>
+  </button>
+</nav>
+
+<!-- MODALS -->
+<!-- Module notification panel -->
+<div class="modal-overlay hidden" id="moduleNotiModal">
+  <div class="modal" style="max-width:580px;">
+    <h2 id="moduleNotiTitle">🔔 Thông báo</h2>
+    <p style="font-size:12px;color:var(--text2);margin:-6px 0 14px;">Gửi qua Telegram Bot · Lưu localStorage &amp; đồng bộ Sheets</p>
+    <div id="moduleNotiBody"></div>
+    <div class="modal-footer" style="margin-top:16px;">
+      <button class="btn btn-ghost" onclick="closeModal('moduleNotiModal')">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Entry Modal -->
+<div class="modal-overlay hidden" id="entryModal">
+  <div class="modal">
+    <h2 id="entryModalTitle">Thêm mục</h2>
+    <input type="hidden" id="entryType"/>
+    <input type="hidden" id="entryEditIdx"/>
+    <div class="modal-row">
+      <label>Tên mục</label>
+      <input class="input" id="entryName" placeholder="Ví dụ: Lương, Tiền nhà..."/>
+    </div>
+    <div class="modal-row">
+      <label>Số tiền (VNĐ — 1.000.000 = 1tr)</label>
+      <input class="input money-input" id="entryAmount" placeholder="1.000.000 = 1tr"/>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('entryModal')">Hủy</button>
+      <button class="btn btn-primary" onclick="saveEntry()">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Task Modal -->
+<div class="modal-overlay hidden" id="taskModal">
+  <div class="modal">
+    <h2 id="taskModalTitle">Thêm công việc</h2>
+    <input type="hidden" id="taskEditIdx"/>
+    <div class="modal-row">
+      <label>Tên công việc</label>
+      <input class="input" id="taskName" placeholder="Tên việc cần làm..."/>
+    </div>
+    <div class="input-row">
+      <div class="modal-row">
+        <label>Loại việc</label>
+        <select class="input" id="taskType">
+          <option value="main">Việc chính</option>
+          <option value="sub">Việc phụ</option>
+          <option value="extra">Phát sinh</option>
+        </select>
+      </div>
+      <div class="modal-row">
+        <label>Hạn chót</label>
+        <input class="input" type="date" id="taskDue"/>
+      </div>
+      <div class="modal-row">
+        <label>Giờ hoàn thành</label>
+        <input class="input" type="time" id="taskDueTime"/>
+      </div>
+    </div>
+    <div class="input-row">
+      <div class="modal-row">
+        <label>Mục tiêu số lượng (VD: 20 video)</label>
+        <input class="input" type="number" id="taskTarget" placeholder="0 = không giới hạn"/>
+      </div>
+      <div class="modal-row">
+        <label>Đã hoàn thành</label>
+        <input class="input" type="number" id="taskProgress" placeholder="0"/>
+      </div>
+    </div>
+    <div class="modal-row">
+      <label>Đơn vị (VD: video, file, trang...)</label>
+      <input class="input" id="taskUnit" placeholder="video"/>
+    </div>
+    <div class="modal-row">
+      <label>Ghi chú</label>
+      <textarea class="note-area" id="taskNote" placeholder="Ghi chú thêm..." style="min-height:60px;"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('taskModal')">Hủy</button>
+      <button class="btn btn-primary" onclick="saveTask()">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- Savings Goal Modal -->
+<div class="modal-overlay hidden" id="savingsModal">
+  <div class="modal">
+    <h2>🎯 Chỉnh mục tiêu tiết kiệm</h2>
+    <div class="modal-row">
+      <label>Tên mục tiêu</label>
+      <input class="input" id="sv-name" placeholder="Ví dụ: Mua xe, Du lịch..."/>
+    </div>
+    <div class="modal-row">
+      <label>Số tiền mục tiêu (VNĐ)</label>
+      <input class="input money-input" id="sv-amount" placeholder="10.000.000 = 10tr"/>
+    </div>
+    <div class="modal-row">
+      <label>Năm mục tiêu</label>
+      <input class="input" type="number" id="sv-year" placeholder="2025"/>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('savingsModal')">Hủy</button>
+      <button class="btn btn-primary" onclick="applySavingsGoal()">Áp dụng</button>
+    </div>
+  </div>
+</div>
+
+<!-- Journey Modal -->
+<div class="modal-overlay hidden" id="journeyModal">
+  <div class="modal">
+    <h2 id="journeyModalTitle">🏆 Thêm hành trình</h2>
+    <input type="hidden" id="journeyEditId"/>
+    <div class="modal-row">
+      <label>Tên hành trình</label>
+      <input class="input" id="journeyName" placeholder="Ví dụ: 30 ngày đọc sách, 21 ngày gym..."/>
+    </div>
+    <div class="input-row">
+      <div class="modal-row">
+        <label>Số ngày (N)</label>
+        <input class="input" type="number" id="journeyDays" min="1" max="999" placeholder="30"/>
+      </div>
+      <div class="modal-row">
+        <label>Ngày bắt đầu</label>
+        <input class="input" type="date" id="journeyStart"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('journeyModal')">Hủy</button>
+      <button class="btn btn-primary" onclick="saveJourney()">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
